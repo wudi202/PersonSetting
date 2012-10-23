@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="hello">Hello World, PersonSettingActivity!</string>
+    <string name="app_name">PersonSetting</string>
+    <string name="callrecord">电话录音</string>
+    <string name="voicerecord">录音</string>
+
+</resources>
