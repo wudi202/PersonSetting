@@ -5,6 +5,7 @@ package me.lifetrip.util;
 import android.content.Context;
 import android.database.Cursor;
 import android.provider.ContactsContract;
+import android.util.Log;
 
 enum PHONETYPE
 {
@@ -29,6 +30,10 @@ enum PHONETYPE
  * @exception  对方法的说明 对方法可能抛出的异常进行说明
 */
 public class phoneNumParse {
+	
+	static String strCountry;
+	static String strArea;
+	static String strFinalNum;
 	/*
 	 * @Description	从原始号码里面解析出来对应的区号和去掉区号以后的号码
 	 * see		  三位的电话区号："010", "020", "021", "022", "023", 
@@ -40,14 +45,15 @@ public class phoneNumParse {
 	 * @return    返回电话的类型，具体归类见上面PHONETYPE的说明
 	 * @exception  对方法的说明 对方法可能抛出的异常进行说明
 	*/
-    PHONETYPE parsePhoneNum(String strOriginNum, String strCountry, String strArea, String strFinalNum)
+    public static PHONETYPE parsePhoneNum(String strOriginNum)
     {
 	    	String strRealPhone = strOriginNum;
 	    	PHONETYPE enPhoneType = PHONETYPE.PHONE_UNKONWN;
 	    	strCountry = null;
 	    	strArea = null;
 	    	int num_len = strOriginNum.length();
-	
+	    	strFinalNum = strOriginNum;
+	    	
 	    if (13 == num_len)
 	    {
 	        	if (strRealPhone.substring(0, 2).equals("+86"))
@@ -60,6 +66,7 @@ public class phoneNumParse {
 	    }
 	   
 	    strFinalNum = strRealPhone;
+	    Log.d("the parse: ", "strlen="+strRealPhone.length());
 	    //如果电话号码，去掉前面的+86之后(如果有的话),剩下的位数不满足要求的话，认为非法直接返回
 	    if (strRealPhone.length() > 11 || strRealPhone.length() < 7)
 	    {
@@ -88,6 +95,7 @@ public class phoneNumParse {
 	            	if ('1' == strRealPhone.charAt(0))   //手机第一位是1
 	            	{
 	            		enPhoneType = PHONETYPE.MOBILEPHONENUM;
+	            		Log.d("the parse22: strFinalNum=", strFinalNum);
 	            	}
 	            	else if ('0' == strRealPhone.charAt(0))   //固话都是以0开始的
 	            	{
@@ -126,19 +134,16 @@ public class phoneNumParse {
 	 * @return    返回解析以后的裸露的手机号，如果这个号码不是可以解析的手机号的话(如固话)，则返回null
 	 * @exception  对方法的说明 对方法可能抛出的异常进行说明
 	*/
-    String getMobileFormPhoneNumber(String strPhoneNum)
+    public static String getMobileFormPhoneNumber(String strPhoneNum)
     {
 	    	String strMobileNum = null;
 	    	PHONETYPE enPhoneType = PHONETYPE.PHONE_UNKONWN;
-	    	String strCountry = null;
-	    	String strArea= null;
-	    	String strFinalNum = null;
 	    	if (null == strPhoneNum)
 	    	{
 	    		return null;
 	    	}
 	    	
-	    	enPhoneType = parsePhoneNum(strPhoneNum, strCountry, strArea, strFinalNum);
+	    	enPhoneType = parsePhoneNum(strPhoneNum);
 	    	if (PHONETYPE.MOBILEPHONENUM == enPhoneType)
 	    	{
 	    		strMobileNum = strFinalNum;
@@ -152,35 +157,49 @@ public class phoneNumParse {
 	 * @return    返回得到的通讯录中的联系人名字，如果没有找到的话回返回null
 	 * @exception  对方法的说明 对方法可能抛出的异常进行说明
 	*/    
-    String getContactName(Context context, String strPhoneNum)
+    public static String getContactName(Context context, String strPhoneNum)
     {
-	    	PHONETYPE enPhoneType = PHONETYPE.PHONE_UNKONWN;
-	    	String strCountry = null;
-	    	String strArea= null;
-	    	String strFinalNum = null;   
+	    	PHONETYPE enPhoneType = PHONETYPE.PHONE_UNKONWN;  
 	    	String selection = null;
 	    	String name = null;
 	    	Cursor c = null;
-	    	
+	    	Log.d("parse phone", strPhoneNum);
 	    	if ((null == context) || (null == strPhoneNum))
 	    		return null;
-	    	
-	    	enPhoneType = parsePhoneNum(strPhoneNum, strCountry, strArea, strFinalNum);
+	    	Log.d("parse phone-2", strPhoneNum);
+	    	enPhoneType = parsePhoneNum(strPhoneNum);
+	    	Log.d("parse phone-3", enPhoneType + "  " + strFinalNum);
+//	    	if (PHONETYPE.MOBILEPHONENUM == enPhoneType)
+//	    	{
+//	    		Log.d("the finalnum2: ", strFinalNum);
+//		    selection = ContactsContract.CommonDataKinds.Phone.NUMBER+" = "+'"' + strFinalNum +'"'
+//                         + " OR " + ContactsContract.CommonDataKinds.Phone.NUMBER+" = "+"\"+86" + strFinalNum +'"';
+//	    	}
+//	    	else if (PHONETYPE.TELEPHONE_LOCAL == enPhoneType)
+//	    	{
+//			    selection = ContactsContract.CommonDataKinds.Phone.NUMBER+" = "+'"' + strFinalNum +'"';	    		
+//	    	}
+//	    	else 
+//	    	{
+//			    selection = ContactsContract.CommonDataKinds.Phone.NUMBER+" = "+'"' + strPhoneNum +'"';			
+//		}
+
 	    	if (PHONETYPE.MOBILEPHONENUM == enPhoneType)
 	    	{
-		    selection = ContactsContract.CommonDataKinds.Phone.NUMBER+" = "+'"' + strFinalNum +'"'
-                         + " OR " + ContactsContract.CommonDataKinds.Phone.NUMBER+" = "+"\"+86" + strFinalNum +'"';
+	    		Log.d("the finalnum2: ", strFinalNum);
+		    selection = ContactsContract.CommonDataKinds.Phone.NUMBER+" = "+ strFinalNum
+                         + " OR " + ContactsContract.CommonDataKinds.Phone.NUMBER+" = "+"+86" + strFinalNum;
 	    	}
 	    	else if (PHONETYPE.TELEPHONE_LOCAL == enPhoneType)
 	    	{
-			    selection = ContactsContract.CommonDataKinds.Phone.NUMBER+" = "+'"' + strFinalNum +'"';	    		
+			    selection = ContactsContract.CommonDataKinds.Phone.NUMBER+" = " + strFinalNum;	    		
 	    	}
 	    	else 
 	    	{
-			    selection = ContactsContract.CommonDataKinds.Phone.NUMBER+" = "+'"' + strPhoneNum +'"';			
+			    selection = ContactsContract.CommonDataKinds.Phone.NUMBER+" = " + strPhoneNum;			
 		}
-	    	
 	    	try {
+	    		Log.d("get contact selection2: ", selection);
 	        c = context.getContentResolver().query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI,   
 	                                                      null, selection, null, null);
 	        //找到了对应的联系人        
@@ -188,9 +207,14 @@ public class phoneNumParse {
 	        {
 		        	int nameFieldColumnIndex = c.getColumnIndex(ContactsContract.PhoneLookup.DISPLAY_NAME);
 		        	name = c.getString(nameFieldColumnIndex);
+		        	Log.d("get the name", name);
 	        }
+	        else {
+	        	    Log.d("parse phone and can not find in the contact", strPhoneNum);
+			}
 	    	}
 	    	catch (Exception e) {
+	    		Log.d("parse phone, some exception happened: ", e.getMessage());
 	    		return null;
 	    	}
 	    	finally {

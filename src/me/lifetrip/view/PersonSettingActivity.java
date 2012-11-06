@@ -1,14 +1,18 @@
 package me.lifetrip.view;
 
 import me.lifetrip.listener.PhoneCallListener;
+import android.R.id;
+import android.R.integer;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
+import android.database.Cursor;
 import android.os.Bundle;
 import android.os.Environment;
+import android.provider.ContactsContract;
 import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
 import android.util.Log;
@@ -32,9 +36,16 @@ public class PersonSettingActivity extends Activity {
         
         PREFS_NAME = "sample.personalsetting.com";
         mSharedPreferences = getSharedPreferences(PREFS_NAME, 0);
-        
+        String selection = ContactsContract.CommonDataKinds.Phone.NUMBER+" = 10086 OR "+ ContactsContract.CommonDataKinds.Phone.NUMBER+" = +8610086";
+        Cursor c = getContentResolver().query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI,   
+                null, selection, null, null);
+        int iii = c.getCount();
+        Log.d(TAG, Integer.toString(iii));
         Boolean iscallrecord = mSharedPreferences.getBoolean("RecordCall", false);
-                
+		//…Ë÷√º‡Ã˝
+        if (true == iscallrecord) {
+		    PersonSettingActivity.SetCallLisener(PersonSettingActivity.this, iscallrecord);
+        }
         CheckBox callrecord = (CheckBox)this.findViewById(R.id.callrecord);
         callrecord.setChecked(iscallrecord);
         
@@ -70,9 +81,9 @@ public class PersonSettingActivity extends Activity {
     
     private void OpenAlertDialog(String myTitle, String myMsg)
     {
-    	AlertDialog.Builder myBuilder = new AlertDialog.Builder(this).setTitle(myTitle).setMessage(myMsg);
-    	
-    	myBuilder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+	    	AlertDialog.Builder myBuilder = new AlertDialog.Builder(this).setTitle(myTitle).setMessage(myMsg);
+	    	
+	    	myBuilder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
 			
 			public void onClick(DialogInterface dialog, int which) {
 				// TODO Auto-generated method stub
@@ -90,7 +101,7 @@ public class PersonSettingActivity extends Activity {
     {
         if (!isSet && null == myPhoneListener)
         {
-        	return;
+        		return;
         }
 		if (null == myPhoneListener)
 		{

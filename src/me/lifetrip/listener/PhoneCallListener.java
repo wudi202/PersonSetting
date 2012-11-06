@@ -2,6 +2,7 @@ package me.lifetrip.listener;
 
 import java.io.File;
 import me.lifetrip.service.telService;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.media.MediaRecorder;
@@ -77,9 +78,12 @@ public class PhoneCallListener extends PhoneStateListener
 				    	
 				    	//在通话开始的时候，如果直接开始录音监听的话，会出现问题，会导致后面的其他时间得不到通知
 				    //所以不能在这里直接开始，这里起了一个service进行处理，起一个后台进程其实也是可以的			    	
-				    	serIntent = new Intent(context, telService.class);
+				    	serIntent = new Intent(context, me.lifetrip.service.telService.class);
 				    	serIntent.putExtra(telService.CALLNUM, callNum);
-				    	context.startService(serIntent);
+				    	ComponentName tt = context.startService(serIntent);
+				    	if (null == tt) {
+				    		Log.d(TAG, "the old service not exist");
+				    	}
 			        	break;
 			    }
 			    default:
@@ -96,5 +100,6 @@ public class PhoneCallListener extends PhoneStateListener
     public static void SetOutNum(String outCallNum) {
     	    //如果是在通话过程中拨出去的新电话，因为service已经开始了，这里这个值被改写也不会影响啥
     	    callNum = outCallNum;
+    	    Log.d("shit", outCallNum);
     }
 }

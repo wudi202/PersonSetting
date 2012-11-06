@@ -24,11 +24,12 @@
             </intent-filter>
         </activity>
         
-        <receiver android:name="me.lifetrip.view.MyCallReceiver" android:label="MyCallReceiver">
+        <receiver android:name="me.lifetrip.listener.MyCallReceiver" android:label="MyCallReceiver">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED"/>
                 <action android:name="android.intent.action.NEW_OUTGOING_CALL"/>
             </intent-filter>
         </receiver>
+        <service android:name="me.lifetrip.service.telService"/>
     </application>
 </manifest>
