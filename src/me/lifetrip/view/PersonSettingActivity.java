@@ -1,20 +1,19 @@
 package me.lifetrip.view;
 
+import java.text.SimpleDateFormat;
+
 import me.lifetrip.listener.PhoneCallListener;
-import android.R.id;
-import android.R.integer;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
-import android.database.Cursor;
 import android.os.Bundle;
 import android.os.Environment;
-import android.provider.ContactsContract;
 import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
+import android.text.format.DateFormat;
 import android.util.Log;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
@@ -36,11 +35,7 @@ public class PersonSettingActivity extends Activity {
         
         PREFS_NAME = "sample.personalsetting.com";
         mSharedPreferences = getSharedPreferences(PREFS_NAME, 0);
-        String selection = ContactsContract.CommonDataKinds.Phone.NUMBER+" = 10086 OR "+ ContactsContract.CommonDataKinds.Phone.NUMBER+" = +8610086";
-        Cursor c = getContentResolver().query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI,   
-                null, selection, null, null);
-        int iii = c.getCount();
-        Log.d(TAG, Integer.toString(iii));
+ 
         Boolean iscallrecord = mSharedPreferences.getBoolean("RecordCall", false);
 		//设置监听
         if (true == iscallrecord) {
@@ -61,8 +56,9 @@ public class PersonSettingActivity extends Activity {
 						Boolean sdCardExit = Environment.getExternalStorageState().equals(android.os.Environment.MEDIA_MOUNTED);
 						if (!sdCardExit)
 						{
-							//这里可以显示弹窗提示需要插入sd卡
+							//这里可以显示弹窗提示需要插入sd卡,同时不能让其被选中
 							OpenAlertDialog("告警","请插入SD卡");
+							buttonView.setChecked(false);
 							return;
 						}						
 					}	
@@ -92,8 +88,8 @@ public class PersonSettingActivity extends Activity {
 
 		});
     	
-    	AlertDialog myAlertDiag = myBuilder.create();
-    	myAlertDiag.show();
+	    	AlertDialog myAlertDiag = myBuilder.create();
+	    	myAlertDiag.show();
     }
     
     //设置lisener

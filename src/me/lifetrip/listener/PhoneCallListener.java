@@ -2,7 +2,6 @@ package me.lifetrip.listener;
 
 import java.io.File;
 import me.lifetrip.service.telService;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.media.MediaRecorder;
@@ -80,10 +79,7 @@ public class PhoneCallListener extends PhoneStateListener
 				    //所以不能在这里直接开始，这里起了一个service进行处理，起一个后台进程其实也是可以的			    	
 				    	serIntent = new Intent(context, me.lifetrip.service.telService.class);
 				    	serIntent.putExtra(telService.CALLNUM, callNum);
-				    	ComponentName tt = context.startService(serIntent);
-				    	if (null == tt) {
-				    		Log.d(TAG, "the old service not exist");
-				    	}
+				    	context.startService(serIntent);
 			        	break;
 			    }
 			    default:

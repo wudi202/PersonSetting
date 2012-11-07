@@ -4,11 +4,14 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.sql.Date;
+import java.util.Calendar;
 
 import me.lifetrip.util.phoneNumParse;
 
 import com.uraroji.garage.android.lame.SimpleLame;
 
+import android.R.integer;
 import android.content.Context;
 import android.content.Intent;
 import android.media.AudioFormat;
@@ -44,11 +47,9 @@ public class telService extends android.app.Service
 			return;
 		}
 		isInRecord = true;
-		Log.e(TAG, (null == intent)?"null":"not null");
 		if (null != intent)
 		{
 			callnum = intent.getStringExtra(CALLNUM);
-			Log.e(TAG, "callnum = "+callnum);
 			if (null == mcallRecord)
 			{
 				Log.e(TAG, "the recorder is destroy by some error");
@@ -202,6 +203,7 @@ class CallRecord
 		}
 	}
     //根据设计的命名规则，这个命令函数还需要做修改, suffix表示后缀，如果需要mp3格式使用mp3,否则使用3gpp
+	//命名格式如20121107-***-1.map3
     File AddRecordPath(String callnum, String suffix) throws IOException
     {
     	    if (!Environment.getExternalStorageState().equals(android.os.Environment.MEDIA_MOUNTED)) {
@@ -219,6 +221,13 @@ class CallRecord
     				callnumString = callnum;	
     			}
     		}
+    	
+    		java.util.Date curTime = new java.util.Date(System.currentTimeMillis());
+    		int curYear = curTime.getYear()+1900;
+    		int curMon = curTime.getMonth();
+    		int curDay = curTime.getDay();
+    		String thisDay = String.format("%d%2d%2d-", curYear,curMon,curDay);
+    		thisDay = thisDay.replace(" ", "0");
     		
         String myRecDir = Environment.getExternalStorageDirectory().getAbsolutePath()+"/"+dirName+"/";
         File fileDir = new File(myRecDir); 
@@ -227,12 +236,12 @@ class CallRecord
         }
         
         //如果要存的文件名已经存在的话，在后面加上index
-        File audioFile = new File(myRecDir+callnumString+"."+suffix);
+        File audioFile = new File(myRecDir+thisDay+callnumString+"."+suffix);
         int nameindx = 0;
         while ((null != audioFile) && (audioFile.exists()))
         {
 	        	nameindx ++;
-	        	audioFile = new File(myRecDir+callnumString+"_"+Integer.toString(nameindx)+"."+suffix);
+	        	audioFile = new File(myRecDir+thisDay+callnumString+"-"+Integer.toString(nameindx)+"."+suffix);
         }
         if (null != audioFile) {
             audioFile.createNewFile();

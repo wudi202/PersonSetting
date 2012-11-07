@@ -66,7 +66,6 @@ public class phoneNumParse {
 	    }
 	   
 	    strFinalNum = strRealPhone;
-	    Log.d("the parse: ", "strlen="+strRealPhone.length());
 	    //如果电话号码，去掉前面的+86之后(如果有的话),剩下的位数不满足要求的话，认为非法直接返回
 	    if (strRealPhone.length() > 11 || strRealPhone.length() < 7)
 	    {
@@ -95,7 +94,6 @@ public class phoneNumParse {
 	            	if ('1' == strRealPhone.charAt(0))   //手机第一位是1
 	            	{
 	            		enPhoneType = PHONETYPE.MOBILEPHONENUM;
-	            		Log.d("the parse22: strFinalNum=", strFinalNum);
 	            	}
 	            	else if ('0' == strRealPhone.charAt(0))   //固话都是以0开始的
 	            	{
@@ -166,27 +164,10 @@ public class phoneNumParse {
 	    	Log.d("parse phone", strPhoneNum);
 	    	if ((null == context) || (null == strPhoneNum))
 	    		return null;
-	    	Log.d("parse phone-2", strPhoneNum);
 	    	enPhoneType = parsePhoneNum(strPhoneNum);
-	    	Log.d("parse phone-3", enPhoneType + "  " + strFinalNum);
-//	    	if (PHONETYPE.MOBILEPHONENUM == enPhoneType)
-//	    	{
-//	    		Log.d("the finalnum2: ", strFinalNum);
-//		    selection = ContactsContract.CommonDataKinds.Phone.NUMBER+" = "+'"' + strFinalNum +'"'
-//                         + " OR " + ContactsContract.CommonDataKinds.Phone.NUMBER+" = "+"\"+86" + strFinalNum +'"';
-//	    	}
-//	    	else if (PHONETYPE.TELEPHONE_LOCAL == enPhoneType)
-//	    	{
-//			    selection = ContactsContract.CommonDataKinds.Phone.NUMBER+" = "+'"' + strFinalNum +'"';	    		
-//	    	}
-//	    	else 
-//	    	{
-//			    selection = ContactsContract.CommonDataKinds.Phone.NUMBER+" = "+'"' + strPhoneNum +'"';			
-//		}
 
 	    	if (PHONETYPE.MOBILEPHONENUM == enPhoneType)
 	    	{
-	    		Log.d("the finalnum2: ", strFinalNum);
 		    selection = ContactsContract.CommonDataKinds.Phone.NUMBER+" = "+ strFinalNum
                          + " OR " + ContactsContract.CommonDataKinds.Phone.NUMBER+" = "+"+86" + strFinalNum;
 	    	}
@@ -199,15 +180,15 @@ public class phoneNumParse {
 			    selection = ContactsContract.CommonDataKinds.Phone.NUMBER+" = " + strPhoneNum;			
 		}
 	    	try {
-	    		Log.d("get contact selection2: ", selection);
 	        c = context.getContentResolver().query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI,   
-	                                                      null, selection, null, null);
+                    null, selection, null, null);
+	       
 	        //找到了对应的联系人        
 	        if ((null != c) && (0 != c.getCount()))
 	        {
+	        	    c.moveToFirst();
 		        	int nameFieldColumnIndex = c.getColumnIndex(ContactsContract.PhoneLookup.DISPLAY_NAME);
 		        	name = c.getString(nameFieldColumnIndex);
-		        	Log.d("get the name", name);
 	        }
 	        else {
 	        	    Log.d("parse phone and can not find in the contact", strPhoneNum);
