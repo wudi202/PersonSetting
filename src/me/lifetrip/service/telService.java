@@ -4,14 +4,8 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.sql.Date;
-import java.util.Calendar;
-
 import me.lifetrip.util.phoneNumParse;
-
 import com.uraroji.garage.android.lame.SimpleLame;
-
-import android.R.integer;
 import android.content.Context;
 import android.content.Intent;
 import android.media.AudioFormat;

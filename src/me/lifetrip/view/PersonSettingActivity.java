@@ -1,7 +1,5 @@
 package me.lifetrip.view;
 
-import java.text.SimpleDateFormat;
-
 import me.lifetrip.listener.PhoneCallListener;
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -13,7 +11,6 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
-import android.text.format.DateFormat;
 import android.util.Log;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
