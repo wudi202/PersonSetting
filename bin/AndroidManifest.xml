@@ -30,5 +30,8 @@
             </intent-filter>
         </receiver>
         <service android:name="me.lifetrip.service.telService"/>
+        <provider android:name="me.lifetrip.provider.RecordInfoProvider"
+                  android:authorities="com.me.lifetrip.RecordInfo"
+                  android:exported="false"></provider>
     </application>
 </manifest>

@@ -12,6 +12,8 @@ import android.os.Environment;
 import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
 import android.util.Log;
+import android.view.View;
+import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.CompoundButton.OnCheckedChangeListener;
@@ -70,6 +72,9 @@ public class PersonSettingActivity extends Activity {
 				}
 			}
 		});
+        
+        Button showRecordButton = (Button)this.findViewById(R.id.showrecord);
+        //showRecordButton.setOnClickListener(new )
     }
     
     private void OpenAlertDialog(String myTitle, String myMsg)
@@ -109,5 +114,20 @@ public class PersonSettingActivity extends Activity {
 			telMgr.listen(myPhoneListener, PhoneStateListener.LISTEN_NONE);
 		}
 		
+    }
+    
+    
+    //下面把listener的类独立来写，这样代码比较清晰
+    class ShowRecord_Onclick implements View.OnClickListener
+    {
+
+		@Override
+		public void onClick(View v) {
+			// TODO Auto-generated method stub
+			//出发显示记录
+			if (R.id.showrecord == v.getId()) {
+				
+			}
+		}
     }
 }

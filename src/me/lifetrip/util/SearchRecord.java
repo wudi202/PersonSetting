@@ -1,53 +1,131 @@
 package me.lifetrip.util;
 
-import java.io.File;
 import java.util.ArrayList;
 
-import android.R.integer;
+import me.lifetrip.provider.RecordInfo.CallRecordInfo;
 import android.content.Context;
+import android.database.Cursor;
+import android.net.Uri;
 import android.util.Log;
-import android.widget.Toast;
 
 public class SearchRecord {
 	private static final String TAG = "SearchRecord";
-	private String RecordDir = null;
-	public static int ORDER_BYNAME = 1;
-	public static int ORDER_BYDATA = 2;
-	int mOrderType = ORDER_BYDATA;
+	public static int GROUPBY_BYNAME = 1;
+	public static int GROUPBY_BYDATE = 2;
+	int mOrderType = 0;
 	Context mContext = null;
 	
-	SearchRecord(Context context, String dir) {
-		RecordDir = dir;
+	SearchRecord(Context context) {
 		mContext = context;
 	}
 	
-	//按照对应的排列顺序排列所有的记录显示
-	ArrayList<String> listAllRecord(int orderType)
+	//根据名字归类返回所有的数据
+	ArrayList<RecordStruct> listAllRecord_byName()
 	{
-		ArrayList<String> recordList = null;
+		return listRecord(null, null, null, null, GROUPBY_BYNAME);
+	}
+	
+	//正常的按照日期降序输出排列
+	ArrayList<RecordStruct> listAllRecord_byDate()
+	{
+		return listRecord(null, null, null, null, GROUPBY_BYDATE);
+	}
+	
+	//返回对应号码的所有电话
+	ArrayList<RecordStruct> listALLRecord_forNum(String phoneNum)
+	{
+		String selection = CallRecordInfo.PHONENUM + " = ?";
+		String[] selectionArgs;
+		String mobileNumString;
 		
-		if (null == RecordDir) {
-			if (null != mContext) {
-				Toast.makeText(mContext, "No record dir", Toast.LENGTH_SHORT).show();
-			}
-			Log.e(TAG, "the record dir is null");
-			return recordList;
-		}
-			
-		if ((ORDER_BYNAME == orderType) || (ORDER_BYDATA == orderType)) {
-			mOrderType = orderType;
+		mobileNumString = phoneNumParse.getMobileFormPhoneNumber(phoneNum);
+		
+		if (null == mobileNumString) {
+			selectionArgs = new String[] {phoneNum};
 		}
 		else {
-			Log.e(TAG, "the list order type is invalid: "+Integer.toString(orderType));
+			selectionArgs = new String[] {mobileNumString};
 		}
 		
-		File dirFile = new File(RecordDir);
-		File allFiles[] = dirFile.listFiles();
-		if (0 == allFiles.length) {
-			Log.d(TAG, "there is no record!");
-			return recordList;
+		return listRecord(null, selection, selectionArgs, null, GROUPBY_BYDATE);
+	}
+	
+	//从数据库中获取对应的数据，将得到的数据作为一个链表返回
+	ArrayList<RecordStruct> listRecord(String[] projection, String selection, 
+			String[] selectionArgs, String sortOrder, int groupBy)
+	{
+		ArrayList<RecordStruct> recordList = new ArrayList<RecordStruct>();
+		Uri queryUri;
+			
+		if ((GROUPBY_BYNAME == groupBy) || (GROUPBY_BYDATE == groupBy)) {
+			mOrderType = groupBy;
+		}
+		else {
+			Log.e(TAG, "the list order type is invalid: "+Integer.toString(groupBy));
+			mOrderType = GROUPBY_BYDATE;
 		}
 		
+		queryUri = constructUri(mOrderType);
+		Cursor c = null;
+		try {
+			c = mContext.getContentResolver().query(queryUri, projection, selection, selectionArgs, sortOrder);
+			
+			if (c.moveToFirst())
+			{
+				RecordStruct curRecordStruct;
+				boolean insertOK = false;
+				while (!c.isAfterLast()) {
+					curRecordStruct = getCurData(c);
+					insertOK = recordList.add(curRecordStruct);
+					if (false == insertOK) {
+						Log.e(TAG, "error in insert the query data to the list");
+					}				
+					c.moveToNext();
+				}
+			}
+		}
+		catch (Exception e) {
+			Log.e(TAG, "list record error: "+e.getMessage());
+		}
+		finally {
+			if (null != c)
+			{
+				c.close();
+			}
+		}
 		return recordList;
 	}
+	
+	Uri constructUri(int groupBy)
+	{
+		Uri queryUri = CallRecordInfo.CONTENT_URI;
+		if (GROUPBY_BYNAME == groupBy)
+		{
+			queryUri = Uri.withAppendedPath(queryUri, "groupby_name");
+		}
+		return queryUri;
+	}
+	
+	RecordStruct getCurData(Cursor c) 
+	{
+		RecordStruct curDataRecordStruct = new RecordStruct();
+		int index;
+		index = c.getColumnIndex(CallRecordInfo.PHONENUM);
+		curDataRecordStruct.phoneNum = c.getString(index);
+		
+		index = c.getColumnIndex(CallRecordInfo.NAMEINCONTACT);
+		curDataRecordStruct.nameString = c.getString(index);
+		
+		index = c.getColumnIndex(CallRecordInfo.CALLTIME);
+		curDataRecordStruct.callTimeString = c.getString(index);
+		
+		index = c.getColumnIndex(CallRecordInfo.CALLLENTH);
+		curDataRecordStruct.callLen = c.getInt(index);
+		
+		index = c.getColumnIndex(CallRecordInfo.CALL_IN_OUT);
+		curDataRecordStruct.isInCall = c.getInt(index);
+		
+		return curDataRecordStruct;
+	}
+	
 }

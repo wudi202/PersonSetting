@@ -27,7 +27,8 @@ public class RecordInfo {
 	    	
 	    	public static final String RECORD_CALL_CONTENT = "vnd.android.cursor.dir/vnd.lifetrip.record_info";
 	    	public static final String RECORD_CALL_ITEM_CONTENT = "vnd.android.cursor.dir/vnd.lifetrip.record_info_item";
-
+	    	public static final String RECORD_CALL_RECROD_GROUP_BYNAME = "vnd.android.cursor.dir/vnd.lifetrip.record_groupby_name";
+	    	
         //表名
         //记录信息
         public static final String TABLE = "record_info";
@@ -41,11 +42,11 @@ public class RecordInfo {
 	    	public static final String NAMEINCONTACT = "name";
 	    	public static final String NAMEINCONTACT_TYPE = "TEXT";
 	    	public static final String CALLTIME= "call_time";
-	    	public static final String CALLTIME_TYPE = "TIMESTAMP NOT NULL"; //这个后续需要换成时间的表示形式
+	    	public static final String CALLTIME_TYPE = "TEXT NOT NULL"; //这个后续需要换成时间的表示形式
 	    	public static final String CALLLENTH = "call_length";
 	    	public static final String CALLLENTH_TYPE = "INTEGER";
 	    	public static final String CALL_IN_OUT = "in_out";
-	    	public static final String CALL_IN_OUT_TYPE = "BOOLEAN";//0表示in，1表示out
+	    	public static final String CALL_IN_OUT_TYPE = "INTEGER";//0表示in，1表示out
 	    	public static final String _ID_TYPE = "INTEGER PRIMARY KEY AUTOINCREMENT";
 
 	    	public static final HashMap<String, String> projectionMap = new HashMap<String, String>();

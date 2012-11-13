@@ -5,5 +5,6 @@
     <string name="app_name">PersonSetting</string>
     <string name="callrecord">电话录音</string>
     <string name="voicerecord">录音</string>
+    <string name="showrecord">查看记录</string>
 
 </resources>

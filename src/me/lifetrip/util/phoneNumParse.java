@@ -126,6 +126,10 @@ public class phoneNumParse {
     	    return enPhoneType;
     }
     
+    public static String getRealnum() 
+    {
+    	    return strFinalNum;
+    }
 	/*
 	 * @Description       从电话号码里面获取裸的手机号
 	 * @param     strPhoneNum	input	原始的电话号码  

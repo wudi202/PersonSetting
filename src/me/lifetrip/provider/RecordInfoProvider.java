@@ -1,20 +1,16 @@
 package me.lifetrip.provider;
 
-import java.lang.reflect.Field;
-import java.util.regex.Matcher;
-
 import me.lifetrip.provider.RecordInfo.CallRecordInfo;
-import android.R.integer;
 import android.content.ContentProvider;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.UriMatcher;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteDatabase.CursorFactory;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
+import android.text.TextUtils;
 import android.util.Log;
 
 public class RecordInfoProvider extends ContentProvider{
@@ -22,35 +18,39 @@ public class RecordInfoProvider extends ContentProvider{
 	public static final UriMatcher mmatcher = new UriMatcher(UriMatcher.NO_MATCH);
 	public static final int CALL_RECORD_DIR = 1;
 	public static final int CALL_RECORD_ITEM = 2;
+	public static final int CALL_RECROD_GROUP_BYNAME = 3;
 	
 	static {
 		mmatcher.addURI(RecordInfo.AUTHORITY, "record_info", CALL_RECORD_DIR);
 		mmatcher.addURI(RecordInfo.AUTHORITY, "record_info/#", CALL_RECORD_ITEM);
+		mmatcher.addURI(RecordInfo.AUTHORITY, "record_info/groupby_name", CALL_RECROD_GROUP_BYNAME);
 	}
 	
 	@Override
 	public int delete(Uri uri, String selection, String[] selectionArgs) {
 		// TODO Auto-generated method stub
-		int affected;
+		int affected = 0;
+		if (null == uri) {
+			return 0;
+		}
 		switch (mmatcher.match(uri)) {
 		case CALL_RECORD_DIR:
 		{
 			SQLiteDatabase db = mRecordSqlHelper.getWritableDatabase();
-			db.delete(CallRecordInfo.TABLE, selection, selectionArgs);
-			db.close();			
+			affected = db.delete(CallRecordInfo.TABLE, selection, selectionArgs);	
 		}
 		case CALL_RECORD_ITEM:
 			String fileIdString = uri.getLastPathSegment();
 			SQLiteDatabase db = mRecordSqlHelper.getWritableDatabase();
-			db.delete(CallRecordInfo.TABLE, CallRecordInfo._ID+" = ?", String[] { fileIdString });
-
+			affected = db.delete(CallRecordInfo.TABLE, CallRecordInfo._ID+" = ?", new String[] { fileIdString });
 			break;
-			
-
 		default:
 			break;
 		}
-		return 0;
+		if (0 != affected) {
+			getContext().getContentResolver().notifyChange(uri, null);
+		}
+		return affected;
 	}
 
 	@Override
@@ -65,6 +65,10 @@ public class RecordInfoProvider extends ContentProvider{
 		case CALL_RECORD_ITEM:
 		{
 			return CallRecordInfo.RECORD_CALL_ITEM_CONTENT;
+		}
+		case CALL_RECROD_GROUP_BYNAME:
+		{
+		    return CallRecordInfo.RECORD_CALL_RECROD_GROUP_BYNAME;	
 		}
 		default:
 			throw new IllegalArgumentException("Unknown URI " + uri);
@@ -86,6 +90,7 @@ public class RecordInfoProvider extends ContentProvider{
 		default:
 			throw new IllegalArgumentException("the insert uri is invalid");
 		}
+		getContext().getContentResolver().notifyChange(arg0, null);
 		return insertUri;
 	}
 
@@ -97,21 +102,54 @@ public class RecordInfoProvider extends ContentProvider{
 	}
 
 	@Override
-	public Cursor query(Uri arg0, String[] projectionIn, String selection, String[] selectionArgs,
+	public Cursor query(Uri uri, String[] projectionIn, String selection, String[] selectionArgs,
 			String sortOrder) {
 		// TODO Auto-generated method stub
 		SQLiteDatabase db = mRecordSqlHelper.getReadableDatabase();
 		SQLiteQueryBuilder dbQuery = new SQLiteQueryBuilder();
 		dbQuery.setTables(CallRecordInfo.TABLE);
 		dbQuery.setProjectionMap(CallRecordInfo.projectionMap);
-		Cursor cursor = dbQuery.query(db, projectionIn, selection, selectionArgs, null, null, sortOrder);
+		Cursor cursor = null;
+		if (null == sortOrder) {
+			sortOrder = CallRecordInfo.DEFAULT_SORT_ORDER;
+		}
+		switch (mmatcher.match(uri)) {
+		case CALL_RECORD_DIR:
+			cursor = dbQuery.query(db, projectionIn, selection, selectionArgs, null, null, sortOrder);
+			break;
+		case CALL_RECORD_ITEM:
+			dbQuery.appendWhere(CallRecordInfo._ID+" = "+uri.getLastPathSegment());
+			cursor = dbQuery.query(db, projectionIn, selection, selectionArgs, null, null, sortOrder);
+			break;
+		case CALL_RECROD_GROUP_BYNAME:
+			cursor = dbQuery.query(db, projectionIn, selection, selectionArgs, CallRecordInfo.NAMEINCONTACT, null, "DESC");
+		default:
+			break;
+		}
+		
 		return cursor;
 	}
 
 	@Override
-	public int update(Uri arg0, ContentValues arg1, String arg2, String[] arg3) {
+	public int update(Uri uri, ContentValues values, String selection, String[] selectionArgs) {
 		// TODO Auto-generated method stub
+		SQLiteDatabase db = mRecordSqlHelper.getWritableDatabase();
+		SQLiteQueryBuilder dbQuery = new SQLiteQueryBuilder();
+		dbQuery.setTables(CallRecordInfo.TABLE);
+		dbQuery.setProjectionMap(CallRecordInfo.projectionMap);	
+		switch (mmatcher.match(uri)) {
+		case CALL_RECORD_DIR:
+			db.update(CallRecordInfo.TABLE, values, selection, selectionArgs);
+			break;
+		case CALL_RECORD_ITEM:
+			db.update(CallRecordInfo.TABLE, values, CallRecordInfo._ID+" = "+uri.getLastPathSegment() + (!TextUtils.isEmpty(selection)?" AND "+selection:""), selectionArgs);
+			break;
+
+		default:
+			break;
+		}
 		
+		getContext().getContentResolver().notifyChange(uri, null);
 		return 0;
 	}
 
@@ -145,12 +183,12 @@ class RecordDatabaseHelp extends SQLiteOpenHelper {
 	    String name = values.getAsString(CallRecordInfo.NAMEINCONTACT);
 	    String callTime = values.getAsString(CallRecordInfo.CALLTIME);
 	    int callLen = values.getAsInteger(CallRecordInfo.CALLLENTH);
-	    boolean isInCall = values.getAsBoolean(CallRecordInfo.CALL_IN_OUT);
+	    int isInCall = values.getAsInteger(CallRecordInfo.CALL_IN_OUT);
 	    
 	    return insertNewCall(fileName, phoneNum, name, callTime, callLen, isInCall);
 	}
 	
-	long insertNewCall(String fileName, String phoneNum, String name, String callTime, int callLen, boolean isInCall) {
+	long insertNewCall(String fileName, String phoneNum, String name, String callTime, int callLen, int isInCall) {
 		if ((null == fileName) || (null == phoneNum) || (null == name) || (null == callTime)) {
 			Log.e(TAG, "when insert some data is null");
 			throw new IllegalArgumentException("when insert, the datas can not be null+" +
@@ -190,25 +228,7 @@ class RecordDatabaseHelp extends SQLiteOpenHelper {
 			if (null != c) {
 				c.close();
 			}
-		}
-		
-		this.context.getContentResolver().notifyChange(CallRecordInfo.CONTENT_URI, null);
-		
+		}	
 		return fileID;
 	}
-	
-	long delete (long fileId) {
-		SQLiteDatabase sqldb = getWritableDatabase();
-		
-		int deleted = sqldb.delete(CallRecordInfo.TABLE, CallRecordInfo._ID+" = ?", new String[] {Long.toString(fileId)});
-		this.context.getContentResolver().notifyChange(CallRecordInfo.CONTENT_URI, null);
-		return deleted; 
-	}
-	
-	long query()
-	
-	long update(String fileName, String phoneNum, String name, String callTime, String callLen, boolean isInCall) {
-		
-	}
-	
 }

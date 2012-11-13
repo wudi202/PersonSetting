@@ -3,11 +3,23 @@
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
     android:orientation="vertical" >
-
+
     <CheckBox
         android:id="@+id/callrecord"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/callrecord" />
 
+    <TextView
+        android:id="@+id/tempTexttempText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="" />
+
+    <Button
+        android:id="@+id/showrecord"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/showrecord" />
+                
 </LinearLayout>

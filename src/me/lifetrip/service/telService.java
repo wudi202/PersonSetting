@@ -4,13 +4,19 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
+
+import me.lifetrip.provider.RecordInfo.CallRecordInfo;
 import me.lifetrip.util.phoneNumParse;
 import com.uraroji.garage.android.lame.SimpleLame;
+
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.media.AudioFormat;
 import android.media.AudioRecord;
 import android.media.MediaRecorder;
+import android.net.Uri;
 import android.os.Environment;
 import android.os.IBinder;
 import android.util.Log;
@@ -19,12 +25,14 @@ public class telService extends android.app.Service
 {
 	public static String CALLNUM = "callnum";
 	public static String RECORDTYPE = "recordtype";
+	public static String CALL_IN_OUT = "call_in_out";
 	public static String deffilename = "unknow_";
     private CallRecord mcallRecord;
     private static final String TAG = "telService";
     private boolean isInRecord = false;
     private int recordType = CallRecord.RECORD_MP3;
-	
+    private int isCallin = 0;
+    
 	public telService()
 	{}
 	
@@ -44,12 +52,14 @@ public class telService extends android.app.Service
 		if (null != intent)
 		{
 			callnum = intent.getStringExtra(CALLNUM);
+			isCallin = intent.getIntExtra(CALL_IN_OUT, 0);
 			if (null == mcallRecord)
 			{
 				Log.e(TAG, "the recorder is destroy by some error");
 				mcallRecord = new CallRecord(this);
 			}
 			recordType = intent.getIntExtra(RECORDTYPE, CallRecord.RECORD_MP3);
+			mcallRecord.setIsCallinOrOut(isCallin);
 			mcallRecord.StartRecord(callnum, recordType);
 		}
 		return;
@@ -111,27 +121,41 @@ class CallRecord
 	int mrecordtype = RECORD_3GPP;
     RecordMICInMp3 mRecordMICInMp3 = null;
     private Context context;
+    String nameInContact = null;
+    int isCallin = 0;
+    Uri curUri = null;
+    java.util.Date beginDate = null;
 	
 	public CallRecord(Context context) {
 		this.context = context;
 		//callnumString = telService.deffilename;
 	}
 
+	public void setIsCallinOrOut(int isCallin) {
+		this.isCallin = isCallin;
+	}
+	
 	//开始记录，这里换成mp3格式记录的话还需要做一下修改
 	void StartRecord(String callnum, int recordtype) {
 		if ((RECORD_3GPP != recordtype) && (RECORD_MP3 != recordtype)) {
 			Log.e(TAG, "the record type is not support: "+ Integer.toString(recordtype));
 			recordtype = RECORD_3GPP;
 		}
+		curUri = null;
 		mrecordtype = recordtype;
+		
+		//如果前面又+86，去掉对应的数据
+		String realNumString = phoneNumParse.getMobileFormPhoneNumber(callnum);
+
 		if (RECORD_3GPP == recordtype)
 		{
 			try {
-				audioFile = AddRecordPath(callnum,"3gpp");
+				audioFile = AddRecordPath(realNumString,"3gpp");
 				if (null == audioFile) {
 					Log.e(TAG, "add the record path fail");
 					return;
 				}
+				
 		        recodeRecorder = new MediaRecorder();
 			    recodeRecorder.setAudioSource(MediaRecorder.AudioSource.VOICE_DOWNLINK);
 			    recodeRecorder.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP);
@@ -143,11 +167,12 @@ class CallRecord
 			} catch (Exception e) {
 				Log.e(TAG, e.getStackTrace()+"\n"+e.getMessage());
 				audioFile.delete();
+				return;
 			}
 		}
 		else {
 			try {
-				audioFile = AddRecordPath(callnum, "mp3");
+				audioFile = AddRecordPath(realNumString, "mp3");
 				if (null == audioFile) {
 					Log.e(TAG, "add the record path fail");
 					return;
@@ -157,8 +182,25 @@ class CallRecord
 			}
 			catch (Exception e) {
 				Log.e(TAG, "mp3"+e.getStackTrace()+"\n"+e.getMessage());
+				audioFile.delete();
+				return;
 			}
 		}
+		
+		//在创建成功以后需要更新数据库
+		ContentValues values = new ContentValues();
+		beginDate = new java.util.Date();
+		SimpleDateFormat dataFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+		String datatime = dataFormat.format(beginDate);
+		
+		values.put(CallRecordInfo.FILENAME, audioFile.getName());
+		values.put(CallRecordInfo.PHONENUM, realNumString);
+		values.put(CallRecordInfo.NAMEINCONTACT, nameInContact);
+		values.put(CallRecordInfo.CALLTIME, datatime);
+		values.put(CallRecordInfo.CALL_IN_OUT, isCallin);
+		
+		curUri = context.getContentResolver().insert(CallRecordInfo.CONTENT_URI, values);
+		
 	}
 	
 	//停止记录
@@ -184,7 +226,22 @@ class CallRecord
 		    	    }
 		    }
 		}
-		recordstarted = false;
+		
+        try {
+			ContentValues values = new ContentValues();
+			//得到秒级的时间差
+			long calllen = (System.currentTimeMillis() - beginDate.getTime())/1000;
+			values.put(CallRecordInfo.CALLLENTH, calllen);
+			context.getContentResolver().update(curUri, values, null, null);
+        }
+        catch (Exception e) {
+        	    Log.e(TAG, e.getMessage());
+        }
+        finally {
+	    		curUri = null;
+	    		beginDate = null;
+	    		recordstarted = false;
+        }
 		return;
 	}
 	
@@ -215,6 +272,7 @@ class CallRecord
     				callnumString = callnum;	
     			}
     		}
+    		nameInContact = callnumString;
     	
     		java.util.Date curTime = new java.util.Date(System.currentTimeMillis());
     		int curYear = curTime.getYear()+1900;

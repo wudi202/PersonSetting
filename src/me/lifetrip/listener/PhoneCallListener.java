@@ -24,6 +24,7 @@ public class PhoneCallListener extends PhoneStateListener
     static String callNum = null;
     static boolean isServiceStarted = false;
     Intent serIntent = null;
+    static int isInCall = 0;
     
     
     public PhoneCallListener(Context context)
@@ -57,7 +58,8 @@ public class PhoneCallListener extends PhoneStateListener
 				    	{
 				    		callNum = incomingNumber;
 				    	}
-				        break;			
+				    	isInCall = 1;
+				    break;			
 				}
 			    case TelephonyManager.CALL_STATE_OFFHOOK: //通话中
 			    {
@@ -79,6 +81,7 @@ public class PhoneCallListener extends PhoneStateListener
 				    //所以不能在这里直接开始，这里起了一个service进行处理，起一个后台进程其实也是可以的			    	
 				    	serIntent = new Intent(context, me.lifetrip.service.telService.class);
 				    	serIntent.putExtra(telService.CALLNUM, callNum);
+				    	serIntent.putExtra(telService.CALL_IN_OUT, isInCall);
 				    	context.startService(serIntent);
 			        	break;
 			    }
@@ -96,6 +99,7 @@ public class PhoneCallListener extends PhoneStateListener
     public static void SetOutNum(String outCallNum) {
     	    //如果是在通话过程中拨出去的新电话，因为service已经开始了，这里这个值被改写也不会影响啥
     	    callNum = outCallNum;
-    	    Log.d("shit", outCallNum);
+    	    isInCall = 0;
+    	    //Log.d("shit", outCallNum);
     }
 }
