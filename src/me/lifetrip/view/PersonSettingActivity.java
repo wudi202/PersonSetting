@@ -5,6 +5,7 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.os.Bundle;
@@ -74,7 +75,7 @@ public class PersonSettingActivity extends Activity {
 		});
         
         Button showRecordButton = (Button)this.findViewById(R.id.showrecord);
-        //showRecordButton.setOnClickListener(new )
+        showRecordButton.setOnClickListener(new ShowRecord_Onclick());
     }
     
     private void OpenAlertDialog(String myTitle, String myMsg)
@@ -120,13 +121,15 @@ public class PersonSettingActivity extends Activity {
     //下面把listener的类独立来写，这样代码比较清晰
     class ShowRecord_Onclick implements View.OnClickListener
     {
-
 		@Override
 		public void onClick(View v) {
 			// TODO Auto-generated method stub
+			Intent intent = null;
 			//出发显示记录
 			if (R.id.showrecord == v.getId()) {
-				
+				intent = new Intent();
+				intent.setClass(v.getContext(), ShowRecordActivity.class);
+				startActivity(intent);
 			}
 		}
     }

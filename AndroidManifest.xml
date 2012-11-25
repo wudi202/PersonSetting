@@ -22,6 +22,14 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+ 
+        <activity
+            android:label="@string/showrecord"
+            android:name=".ShowRecordActivity" >
+            <intent-filter >
+                <action android:name="android.intent.action.VIEW" />
+            </intent-filter>
+        </activity>
         
         <receiver android:name="me.lifetrip.listener.MyCallReceiver" android:label="MyCallReceiver">
             <intent-filter>

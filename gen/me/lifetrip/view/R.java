@@ -14,8 +14,11 @@ public final class R {
         public static final int ic_launcher=0x7f020000;
     }
     public static final class id {
+        public static final int calllen=0x7f050006;
+        public static final int callnum=0x7f050003;
         public static final int callrecord=0x7f050000;
-        public static final int listView1=0x7f050003;
+        public static final int calltime=0x7f050004;
+        public static final int inout=0x7f050005;
         public static final int showrecord=0x7f050002;
         public static final int tempTexttempText=0x7f050001;
     }

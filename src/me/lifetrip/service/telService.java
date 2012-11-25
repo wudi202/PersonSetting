@@ -29,6 +29,7 @@ public class telService extends android.app.Service
 	public static String deffilename = "unknow_";
     private CallRecord mcallRecord;
     private static final String TAG = "telService";
+    public static final String dirName = "callrecord";
     private boolean isInRecord = false;
     private int recordType = CallRecord.RECORD_MP3;
     private int isCallin = 0;
